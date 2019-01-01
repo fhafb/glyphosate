@@ -1,0 +1,100 @@
+@import "colors";
+
+body {
+	height: 100vh;
+	overflow: hidden;
+	margin: 0;
+	font: 2.8vh sans-serif;
+	display: flex;
+	flex-flow: column nowrap;
+	
+	& > h1 {
+		flex: none;
+		text-align: center;
+		font: bold 180% sans-serif;
+		color: $color_afbdarkgreen;
+		border-width: 0 0 1.5vh 0;
+		border-style: solid;
+		border-image: linear-gradient(to right,$color_afbdarkblue 0%,$color_afbgreen 50%,$color_afblightblue 100%) 0 0 100% 0 / 0 0 1.5vh 0;
+	}
+
+	.content {
+		flex: auto;
+		display: flex;
+		flex-flow: row nowrap;
+	}
+
+	.mapbox {
+		display: flex;
+		flex: auto;
+		flex-flow: column nowrap;
+		margin:2vh 2vw;
+		box-shadow: 1.5vw 1.2vh 1.2vmax rgba(0,0,0,0.5);
+		border-radius: 20px;
+	}
+
+}
+
+#tools {
+	width: 300px;
+	flex: initial;
+
+	h1 {
+		font-size:1em;
+	}
+	
+	.legend {
+		width: 100%;
+		height: 50px;
+		display: block;
+		margin: 10px auto 10px auto;
+	}
+}
+
+#map {
+	flex: auto;
+	height: 100%;
+	border-radius: 20px;
+}
+
+.tooltip {
+	h1 {
+		font-size: 1em;
+	}
+}
+
+.tooltipframe {
+	fill: black;
+}
+
+.tooltiptext {
+	fill: white;
+	font: normal 1em sans-serif;
+	dominant-baseline: middle;
+	text-anchor: middle;
+}
+
+.fill_a {
+	fill: $palettea;
+}
+
+.fill_b {
+	fill: $paletteb;
+}
+
+.stroke_a {
+	stroke: $palettea;
+}
+
+.stroke_b {
+	stroke: $paletteb;
+}
+
+.stroke_d {
+	stroke: $paletted;
+}
+
+.leaflet-div-icon {
+	border-style: none;
+	background-color: transparent;
+}
