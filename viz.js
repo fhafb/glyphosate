@@ -182,6 +182,31 @@ function create_tooltip_bnvd(feature) {
 	return content;
 }
 
+function create_tooltip_naiades(feature) {
+	let year=document.getElementById('year').value;
+	let maxdate=(year+1)+'-01-01';
+	let i=0;
+	while (i<feature['properties']['data'].length && feature['properties']['data'][i][0]<maxdate) ++i;
+	--i;
+	let j=i;
+	while (i>=0 && feature['properties']['data'][i][1]!=1506) --i;
+	while (j>=0 && feature['properties']['data'][j][1]!=1907) --j;
+	if (i<0 && j<0) return;
+	let content=document.createElement("div");
+	content.classList.add('tooltip');
+	let title=document.createElement('h1');
+	title.textContent=feature.properties["nom"];
+	content.appendChild(title);
+	let p=document.createElement("p");
+	if (i>=0) {
+		p.innerHTML+="Glyphosate : "+feature['properties']['data'][i][2]+"µg/L le "+new Date(feature['properties']['data'][i][0]).toLocaleString('fr-FR');
+		if (j>=0) p.innerHTML+='<br />';
+	}
+	if (j>=0) p.innerHTML+="AMPA : "+feature['properties']['data'][j][2]+"µg/L le "+new Date(feature['properties']['data'][j][0]).toLocaleString('fr-FR');
+	content.appendChild(p);
+	return content;
+}
+
 function updateBnvd(depjson,year) {
 	document.getElementById('currentyear').innerText=year;
 	let maxvalue=0;
@@ -227,10 +252,15 @@ function updateNaiades(stationjson,year,param) {
 		//layer.bindPopup(draw_graph_naiades(feature),{maxWidth:400});
 		layer.bindPopup("Chargement...",{maxWidth:400});
 		layer.on('click',function(e) {
-			var popup=e.target.getPopup();
+			let popup=e.target.getPopup();
 			popup.setContent(draw_graph_naiades(feature));
 			popup.update();
 		});
+		layer.bindTooltip("Chargement...");
+		layer.on('mouseover',function (e) {
+			layer.setTooltipContent(create_tooltip_naiades(feature));
+		});
+		//layer.bindTooltip(create_tooltip_naiades(feature));
 	},pointToLayer:function(feature,latlng) {
 		let i=0;
 		while (i<feature['properties']['data'].length && feature['properties']['data'][i][0]<maxdate) ++i;
@@ -318,7 +348,7 @@ function draw_graph_naiades(feature) {
 	if (pow>0) {
 		for (let i=0;i<pow;++i) ytick*=10;
 	} else {
-		for (let i=-pow;i<0;++i) ytick/=10;
+		for (let i=pow;i<0;++i) ytick/=10;
 	}
 	range[3]=(Math.floor(range[3]/ytick)+1)*ytick;
 	range[1]=(Math.floor(range[1]/ytick))*ytick;
@@ -378,7 +408,7 @@ function draw_graph_naiades(feature) {
 		text.setAttribute('x',margins[0]-1.5+'%');
 		text.setAttribute('y',y);
 		text.setAttribute('style','text-anchor: end; dominant-baseline: middle; font-size: 0.8em');
-		text.textContent=i;
+		text.textContent=Number(i).toLocaleString('fr-FR',{maximumFractionDigits:3});
 		svg.appendChild(text);
 	}
 	for (let j=0;j<2;++j) {
