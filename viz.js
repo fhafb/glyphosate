@@ -24,9 +24,49 @@ function colorscale(scale,min,max,cur) {
 	return rgbcur;
 }
 
-function get_selected_param() {
-	let btns=document.getElementsByName('radioparam');
+function get_selected_param(id) {
+	let btns=document.getElementsByName(id);
 	for (let btn of btns) if (btn.checked==true) return parseInt(btn.value,10);
+}
+
+function make_link_to_full_graph(draw_function,config,div,feature) {
+	let linkp=document.createElement('p');
+	let linka=document.createElement('a');
+	linka.setAttribute('href','#');
+	linka.textContent='Afficher en plein écran';
+	linka.addEventListener('click',function(e) {
+		let cover=document.createElement('div');
+		cover.id='overlay';
+		document.body.insertAdjacentElement('afterbegin',cover);
+		setTimeout(function() {
+			cover.style.opacity=0.5;
+		},20);
+		let popup=document.createElement('div');
+		popup.id='popup';
+		cover.insertAdjacentElement('afterend',popup);
+		popup.addEventListener('transitionend',function(e) {
+			let cbutton=document.createElement('div');
+			cbutton.classList.add('closebutton');
+			cbutton.addEventListener('click',function(e) {
+				let popup=document.getElementById('popup');
+				popup.addEventListener('transitionend',()=> {popup.parentNode.removeChild(popup);});
+				setTimeout(() => {popup.style.height='0px';},20);
+				let cover=document.getElementById('overlay');
+				cover.addEventListener('transitionend',()=> {cover.parentNode.removeChild(cover);});
+				setTimeout(() => {cover.style.opacity='0';},20);
+			});
+			popup.appendChild(cbutton);
+			config['size']=['100%','100%'];
+			let content=draw_function(feature,config,false);
+			popup.appendChild(content);
+		},{once:true});
+		setTimeout(function() {
+			popup.style.height='90vh';
+		},20);
+		return false;
+	});
+	linkp.appendChild(linka);
+	div.appendChild(linkp);
 }
 
 function make_tooltip(event) {
@@ -35,23 +75,23 @@ function make_tooltip(event) {
 	let tooltip=document.createElementNS('http://www.w3.org/2000/svg','g');
 	tooltip.id='svgtooltip';
 	let rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
-	rect.setAttribute('width','60%');
-	rect.setAttribute('height','15%');
+	rect.setAttribute('width','180px');
+	rect.setAttribute('height','23px');
 	let cx=point.getAttribute('cx');
-	let x=cx.substring(0,cx.length-1)-30;
+	let x=cx.substring(0,cx.length-1)*svg.getBBox().width/100-90;
 	let cy=point.getAttribute('cy');
-	let y=cy.substring(0,cy.length-1)-20;
-	if (x>40) x=40;
+	let y=cy.substring(0,cy.length-1)*svg.getBBox().height/100-30;
+	if (x>svg.getBBox().width-180) x=svg.getBBox().width-180;
 	if (x<0) x=0;
-	if (y<0) y=y+30;
-	rect.setAttribute('x',x+'%');
-	rect.setAttribute('y',y+'%');
+	if (y<0) y=y+40;
+	rect.setAttribute('x',x+'px');
+	rect.setAttribute('y',y+'px');
 	rect.setAttribute('rx',10);
 	rect.setAttribute('ry',10);
 	rect.classList.add('tooltipframe');
 	let text=document.createElementNS('http://www.w3.org/2000/svg','text');
-	text.setAttribute('x',(x+30)+'%');
-	text.setAttribute('y',(y+8)+'%');
+	text.setAttribute('x',(x+90)+'px');
+	text.setAttribute('y',(y+11)+'px');
 	if ("year" in point.dataset) {
 		text.textContent=point.dataset["year"]+" : "+Number(point.dataset["value"]).toLocaleString("fr-FR",{maximumFractionDigits:0})+" kg";
 	} else {
@@ -68,15 +108,20 @@ function remove_tooltip(event) {
 	tooltip.parentNode.removeChild(tooltip);
 }
 
-function draw_graph_bnvd(feature) {
+function draw_graph_bnvd(feature,size,link_to_full=false) {
 	let div=document.createElement('div');
+	div.style.display='flex';
+	div.style.flexFlow='column nowrap';
+	div.style.height='100%';
 	let title=document.createElement('h2');
 	title.innerHTML=feature.properties["NOM_DEP"];
+	title.style.flex='initial';
 	div.appendChild(title);
 	let svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
 	div.appendChild(svg);
-	svg.style.width="300px";
-	svg.style.height="150px";
+	svg.style.width=size[0];
+	svg.style.height=size[1];
+	svg.style.flex='auto';
 	//svg.setAttribute('viewBox',"0 0 600 400");
 	values=[];
 	for (let j=2008;j<=2017;++j) values.push([j,feature.properties["V"+j]]);
@@ -155,7 +200,7 @@ function draw_graph_bnvd(feature) {
 		let circle=document.createElementNS("http://www.w3.org/2000/svg",'circle');
 		circle.setAttribute('cx',transx(values[i][0])+'%');
 		circle.setAttribute('cy',transy(values[i][1])+'%');
-		circle.setAttribute('r','2%');
+		circle.setAttribute('r','6px');
 		circle.dataset['year']=values[i][0];
 		circle.dataset['value']=values[i][1];
 		circle.classList.add('fill_a');
@@ -166,6 +211,7 @@ function draw_graph_bnvd(feature) {
 		circle.appendChild(tooltip);
 		svg.appendChild(circle);
 	}
+	if (link_to_full) make_link_to_full_graph(draw_graph_bnvd,{},div,feature);
 	return div;
 }
 
@@ -182,7 +228,7 @@ function create_tooltip_bnvd(feature) {
 	return content;
 }
 
-function create_tooltip_naiades(feature) {
+function create_tooltip_stations(feature) {
 	let year=document.getElementById('year').value;
 	let maxdate=(year+1)+'-01-01';
 	let i=0;
@@ -196,6 +242,7 @@ function create_tooltip_naiades(feature) {
 	content.classList.add('tooltip');
 	let title=document.createElement('h1');
 	title.textContent=feature.properties["nom"];
+	if (title.textContent.length>40) title.textContent=title.textContent.substring(0,40)+'...';
 	content.appendChild(title);
 	let p=document.createElement("p");
 	if (i>=0) {
@@ -236,31 +283,39 @@ function updateBnvd(depjson,year) {
 	}
 }
 
-function updateNaiades(stationjson,year,param) {
+function update_stations(json,num,year,param,force_add) {
+	if (json[num]===null) return;
+	let config=[{'legendid':'naiadeslegend','attribution':'<a href="http://www.naiades.eaufrance.fr">Naïades</a>','markcolor':'#3333cc','urltemplate':"http://www.sandre.eaufrance.fr/urn.php?urn=urn:sandre:donnees:STQ:FRA:code:{}:::referentiel:3.1:html",'codename':"code"},
+		{'legendid':'adeslegend','attribution':'<a href="http://www.ades.eaufrance.fr">Ades</a>','markcolor':'#cc3300','urltemplate':"http://www.ades.eaufrance.fr/Fiche/PtEau?Code={}",'codename':"cdbss"}];
+	let haslayer=map.hasLayer(stationlayer[num]);
 	document.getElementById('currentyear').innerText=year;
 	let maxvalue=0;
 	let maxdate=(year+1)+'-01-01';
-	for (let feat of stationjson["features"]) {
+	/*for (let feat of json[num]["features"]) {
 		for (let data of feat['properties']['data']) {
 			if (data[0]>=maxdate) break;
 			if (data[1]==param && data[2]>maxvalue) maxvalue=data[2];
 		}
-	}
+	}*/
 	maxvalue=1;
-	if (stationlayer!=null) map.removeLayer(stationlayer);
-	stationlayer=L.geoJSON(stationjson,{onEachFeature:function(feature,layer) {
-		//layer.bindPopup(draw_graph_naiades(feature),{maxWidth:400});
+	if (stationlayer[num]!=null) map.removeLayer(stationlayer[num]);
+	loadedbounds=map.getBounds().pad(1);
+	stationlayer[num]=L.geoJSON(json[num],{filter:function(feature) {
+		let coords=feature['geometry']['coordinates'];
+		return loadedbounds.contains(L.latLng(coords[1],coords[0]));
+	},onEachFeature:function(feature,layer) {
+		//layer.bindPopup(draw_graph_stations(feature),{maxWidth:400});
 		layer.bindPopup("Chargement...",{maxWidth:400});
 		layer.on('click',function(e) {
 			let popup=e.target.getPopup();
-			popup.setContent(draw_graph_naiades(feature));
+			popup.setContent(draw_graph_stations(feature,{'size':["400px","150px"],'urltemplate':config[num]['urltemplate'],'codename':config[num]['codename']},true));
 			popup.update();
 		});
 		layer.bindTooltip("Chargement...");
 		layer.on('mouseover',function (e) {
-			layer.setTooltipContent(create_tooltip_naiades(feature));
+			layer.setTooltipContent(create_tooltip_stations(feature));
 		});
-		//layer.bindTooltip(create_tooltip_naiades(feature));
+		//layer.bindTooltip(create_tooltip_stations(feature));
 	},pointToLayer:function(feature,latlng) {
 		let i=0;
 		while (i<feature['properties']['data'].length && feature['properties']['data'][i][0]<maxdate) ++i;
@@ -273,12 +328,18 @@ function updateNaiades(stationjson,year,param) {
 				iconAnchor: [0, 24],
 				labelAnchor: [-6, 0],
 				popupAnchor: [0, -36],
-				html: '<span style="width: 2em; height: 2em; display: block; left: -1em; top: -1em; position: relative; border-radius: 2em 2em 0; transform: rotate(45deg); border: 1px solid #000; background-color: rgb('+rgbcur[0]+','+rgbcur[1]+','+rgbcur[2]+')" />'
+				html: '<span class="marker" style="color: '+config[num]['markcolor']+'; background-color: rgb('+rgbcur[0]+','+rgbcur[1]+','+rgbcur[2]+')">⬤</span>'
 			})
 		})
-	},attribution : '<a href="http://www.naiades.eaufrance.fr">Naïades</a>'});
-	if (map.getZoom()>8) stationlayer.addTo(map);
-	let legend=document.getElementById('naiadeslegend');
+	},attribution : config[num]['attribution']});
+	if (haslayer || force_add) stationlayer[num].addTo(map);
+	if (layerscontrol!=null) {
+		map.removeControl(layerscontrol);
+		overlays[stationlayerparams[num]['name']]=stationlayer[num];
+		layerscontrol=L.control.layers(baselayers,overlays);
+		layerscontrol.addTo(map);
+	}
+	let legend=document.getElementById(config[num]['legendid']);
 	Array.from(legend.getElementsByTagName('text')).forEach(function(element) {
 		element.parentNode.removeChild(element);
 	});
@@ -293,15 +354,20 @@ function updateNaiades(stationjson,year,param) {
 	}
 }
 
-function draw_graph_naiades(feature) {
+function draw_graph_stations(feature,config,link_to_full=false) {
 	let div=document.createElement('div');
+	div.style.display='flex';
+	div.style.flexFlow='column nowrap';
+	div.style.height='100%';
 	let title=document.createElement('h2');
-	title.innerHTML=feature.properties["nom"];
+	title.innerHTML='<a target="_blank" rel="noreferrer" href="'+config['urltemplate'].replace('{}',feature.properties[config['codename']])+'">'+feature.properties["nom"]+'</a>';
+	title.style.flex='initial';
 	div.appendChild(title);
 	let legend=document.createElementNS('http://www.w3.org/2000/svg','svg');
 	div.appendChild(legend);
-	legend.style.width="300px";
+	legend.style.width=config['size'][0];
 	legend.style.height="20px";
+	legend.style.flex='initial';
 	for (let j=0;j<2;++j) {
 		let line=document.createElementNS("http://www.w3.org/2000/svg",'line');
 		let text=document.createElementNS("http://www.w3.org/2000/svg",'text');
@@ -327,8 +393,9 @@ function draw_graph_naiades(feature) {
 	}
 	let svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
 	div.appendChild(svg);
-	svg.style.width="400px";
-	svg.style.height="150px";
+	svg.style.width=config['size'][0];
+	svg.style.height=config['size'][1];
+	svg.style.flex='auto';
 	values=[[],[]];
 	for (let dat of feature.properties.data) {
 		if (dat[1]==1506) values[0].push([new Date(dat[0]),dat[2]]);
@@ -343,6 +410,7 @@ function draw_graph_naiades(feature) {
 			if (val[1]>range[3]) range[3]=val[1];
 		}
 	}
+	if (range[1]>=range[3]) return div;
 	let pow=Math.floor(Math.log10(range[3]-range[1]));
 	let ytick=1;
 	if (pow>0) {
@@ -426,19 +494,17 @@ function draw_graph_naiades(feature) {
 			let circle=document.createElementNS("http://www.w3.org/2000/svg",'circle');
 			circle.setAttribute('cx',transx(values[j][i][0])+'%');
 			circle.setAttribute('cy',transy(values[j][i][1])+'%');
-			circle.setAttribute('r','2%');
+			circle.setAttribute('r','6px');
 			circle.dataset['date']=values[j][i][0];
 			circle.dataset['type']=(j==0)?'Glyphosate':'AMPA';
 			circle.dataset['value']=values[j][i][1];
 			if (j==0) circle.classList.add('fill_a'); else circle.classList.add('fill_b');
 			circle.addEventListener('mouseenter',make_tooltip);
 			circle.addEventListener('mouseleave',remove_tooltip);
-			//let tooltip=document.createElementNS("http://www.w3.org/2000/svg",'title');
-			//tooltip.textContent="Vente de glyphosate en "+values[i][0]+" : "+Number(values[i][1]).toLocaleString("fr-FR",{maximumFractionDigits:0})+" kg";
-			//circle.appendChild(tooltip);
 			svg.appendChild(circle);
 		}
 	}
+	if (link_to_full) make_link_to_full_graph(draw_graph_stations,config,div,feature);
 	return div;
 }
 
@@ -453,35 +519,52 @@ for (let i=2008;i<=2017;++i) {
 // Global variables
 let depjson=null;
 let bnvd=null;
-let stationjson=null;
-let stationlayer=null;
+let stationjson=[null,null];
+let stationlayerparams=[{'file':'stations_esu.json','name':'Rivières'},{'file':'stations_eso.json','name':'Eaux souterraines'}];
+let stationlayer=[null,null];
+let layerscontrol=null;
+let baselayers=null;
+let overlays=null;
+let loadedbounds=null;
+let lastzoom=5.5;
 // Create Leaflet map and base layer
 let map=L.map('map', {zoomSnap:0});
 //let base= L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}', {attribution: 'Tiles &copy; Esri &mdash; Source: US National Park Service',maxZoom: 8});
-let base= L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC', maxZoom: 16 })
+//let base= L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC', maxZoom: 16 })
 //let base = new L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community' });
 //let base = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {minZoom: 2, maxZoom: 12, attribution: 'Données © Contributeurs <a href="http://openstreetmap.org">OpenStreetMap</a>'});
-//let base= L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {maxZoom: 20,attribution: '&copy; Openstreetmap France | &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>' });
+let base= L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {maxZoom: 20,attribution: '&copy; Openstreetmap France | &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>' });
 //let labels= L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.{ext}', {attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>', pane: 'labels', subdomains: 'abcd', minZoom: 0, maxZoom: 20, ext: 'png' });
-map.setView(new L.LatLng(46.1,2.5),5.5);
+map.setView(new L.LatLng(46.1,2.5),lastzoom);
 map.createPane('labels');
 map.getPane('labels').style.zIndex=500;
 map.getPane('labels').style.pointerEvents='none';
 map.addLayer(base);
 map.on('zoomend',function() {
 	let zoom=map.getZoom();
-	if (zoom>8) {
-		if (stationlayer!==null && !map.hasLayer(stationlayer)) map.addLayer(stationlayer);
-		if (bnvd.getTooltip) {
-			let tooltip=bnvd.getTooltip();
-			if (tooltip) map.closeTooltip(tooltip);
+	for (let i=0;i<2;++i) {
+		if (zoom>9 && lastzoom<=9) {
+			//if (stationlayer[i]!==null && !map.hasLayer(stationlayer[i])) map.addLayer(stationlayer[i]);
+			let param=(i==0)?get_selected_param('radioparam'):get_selected_param('radioparameso');
+			update_stations(stationjson,i,document.getElementById('year').value,param,true)
+		} else if (zoom<=9 && lastzoom>9) {
+			if (map.hasLayer(stationlayer[i])) map.removeLayer(stationlayer[i]);
 		}
-	} else {
-		if (map.hasLayer(stationlayer)) map.removeLayer(stationlayer);
-		if (bnvd.getTooltip) {
-			let tooltip=bnvd.getTooltip();
-			if (tooltip) map.addLayer(tooltip);
+	}
+	lastzoom=zoom;
+});
+map.on('moveend',function() {
+	let zoom=map.getZoom();
+	if (zoom<=9) return;
+	if (!loadedbounds.contains(map.getBounds())) {
+		for (let i=0;i<2;++i) {
+			let param=(i==0)?get_selected_param('radioparam'):get_selected_param('radioparameso');
+			update_stations(stationjson,i,document.getElementById('year').value,param,true)
+			delete overlays[stationlayerparams[i]];
 		}
+		map.removeControl(layerscontrol);
+		layerscontrol=L.control.layers(baselayers,overlays);
+		layerscontrol.addTo(map);
 	}
 });
 // Load sales data from GeoJSON file
@@ -496,7 +579,7 @@ let promise=new Promise(function(resolve,reject) {
 				layer.bindPopup("Chargement...",{maxWidth:400});
 				layer.on('click',function(e) {
 					var popup=e.target.getPopup();
-					popup.setContent(draw_graph_bnvd(feature));
+					popup.setContent(draw_graph_bnvd(feature,['300px','150px'],true));
 					popup.update();
 				});
 				layer.bindTooltip(create_tooltip_bnvd(feature));
@@ -510,14 +593,28 @@ let promise=new Promise(function(resolve,reject) {
 });
 // Load station data from GeoJSON file
 promise.then(function() {
-	let xhttp=new XMLHttpRequest();
-	xhttp.open('GET','stations_esu.json',true);
-	xhttp.onreadystatechange=function() {
-		if (this.readyState==XMLHttpRequest.DONE && this.status==200) {
-			stationjson=JSON.parse(this.responseText);
-			updateNaiades(stationjson,2016,1506);
-			//map.addLayer(labels);
-		}
+	let layerpromises=[];
+	baselayers={"OpenStreetMap":base};
+	overlays=[];
+	overlays["Ventes"]=bnvd;
+	for (let i=0;i<stationlayerparams.length;++i) {
+		layerpromises.push(new Promise(function(resolve,reject) {
+			let xhttp=new XMLHttpRequest();
+			xhttp.open('GET',stationlayerparams[i]['file'],true);
+			xhttp.onreadystatechange=function() {
+				if (this.readyState==XMLHttpRequest.DONE && this.status==200) {
+					stationjson[i]=JSON.parse(this.responseText);
+					//update_stations(stationjson,i,2016,1506);
+					//map.addLayer(labels);
+					//overlays[stationlayerparams[i]['name']]=stationlayer[i];
+					resolve();
+				}
+			}
+			xhttp.send();
+		}));
 	}
-	xhttp.send();
+	Promise.all(layerpromises).then(function() {
+		layerscontrol=L.control.layers(baselayers,overlays);
+		layerscontrol.addTo(map);
+	});
 });

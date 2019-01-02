@@ -11,6 +11,7 @@ body {
 	& > h1 {
 		flex: none;
 		text-align: center;
+		margin: 10px 0 10px 0;
 		font: bold 180% sans-serif;
 		color: $color_afbdarkgreen;
 		border-width: 0 0 1.5vh 0;
@@ -31,6 +32,66 @@ body {
 		margin:2vh 2vw;
 		box-shadow: 1.5vw 1.2vh 1.2vmax rgba(0,0,0,0.5);
 		border-radius: 20px;
+	}
+
+}
+
+#overlay {
+	background-color: black;
+	opacity: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	z-index: 1015;
+	transition: opacity 1s linear;
+}
+
+#popup {
+	background-color: white;
+	border-radius: 10px;
+	position: absolute;
+	box-sizing: border-box;
+	padding: 2vh 2vw;
+	top: 5vh;
+	left: 5vw;
+	width: 90vw;
+	height: 0vh;
+	z-index: 1020;
+	transition: height 1s ease;
+
+	.closebutton {
+		position: relative;
+		float:right;
+		margin-top:-25px;
+		margin-right:-25px;
+		cursor:pointer;
+		color: #fff;
+		border: 1px solid #AEAEAE;
+		border-radius: 30px;
+		background: #605F61;
+		font-size: 31px;
+		font-weight: bold;
+		display: inline-block;
+		line-height: 0px;
+		padding: 11px 3px;
+		z-index: 1020;
+
+		&:hover {
+			background: #000000;
+			text-decoration: none;
+		}
+
+		&:before {
+			content: "x";
+			transition: all 1s;
+		}
+
+		&:hover:before {
+			color: #FFFFFF;
+		}
 	}
 
 }
@@ -69,9 +130,22 @@ body {
 
 .tooltiptext {
 	fill: white;
-	font: normal 1em sans-serif;
+	font: normal 12px sans-serif;
 	dominant-baseline: middle;
 	text-anchor: middle;
+}
+
+.marker {
+	width: 2em;
+	height: 2em;
+	text-align: center; 
+	display: block;
+	left: -1em;
+	top: -0.6em;
+	position: relative;
+	border-radius: 2em 2em 0;
+	transform: rotate(45deg);
+	border: 1px solid #000; 
 }
 
 .fill_a {
