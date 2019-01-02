@@ -95,7 +95,7 @@ function make_tooltip(event) {
 	if ("year" in point.dataset) {
 		text.textContent=point.dataset["year"]+" : "+Number(point.dataset["value"]).toLocaleString("fr-FR",{maximumFractionDigits:0})+" kg";
 	} else {
-		text.textContent=new Date(point.dataset["date"]).toLocaleDateString('fr-FR')+" : "+Number(point.dataset["value"]).toLocaleString("fr-FR",{maximumFractionDigits:3})+" µg/L "+point.dataset['type'];
+		text.textContent=new Date(point.dataset["date"]).toLocaleDateString('fr-FR')+" : "+point.dataset['rem']+Number(point.dataset["value"]).toLocaleString("fr-FR",{maximumFractionDigits:3})+" µg/L "+point.dataset['type'];
 	}
 	text.classList.add('tooltiptext');
 	tooltip.appendChild(rect);
@@ -246,10 +246,10 @@ function create_tooltip_stations(feature) {
 	content.appendChild(title);
 	let p=document.createElement("p");
 	if (i>=0) {
-		p.innerHTML+="Glyphosate : "+feature['properties']['data'][i][2]+"µg/L le "+new Date(feature['properties']['data'][i][0]).toLocaleString('fr-FR');
+		p.innerHTML+="Glyphosate : "+(([7,10].includes(feature['properties']['data'][i][3]))?'≤':'')+feature['properties']['data'][i][2]+"µg/L le "+new Date(feature['properties']['data'][i][0]).toLocaleDateString('fr-FR');
 		if (j>=0) p.innerHTML+='<br />';
 	}
-	if (j>=0) p.innerHTML+="AMPA : "+feature['properties']['data'][j][2]+"µg/L le "+new Date(feature['properties']['data'][j][0]).toLocaleString('fr-FR');
+	if (j>=0) p.innerHTML+="AMPA : "+(([7,10].includes(feature['properties']['data'][j][3]))?'≤':'')+feature['properties']['data'][j][2]+"µg/L le "+new Date(feature['properties']['data'][j][0]).toLocaleDateString('fr-FR');
 	content.appendChild(p);
 	return content;
 }
@@ -398,8 +398,8 @@ function draw_graph_stations(feature,config,link_to_full=false) {
 	svg.style.flex='auto';
 	values=[[],[]];
 	for (let dat of feature.properties.data) {
-		if (dat[1]==1506) values[0].push([new Date(dat[0]),dat[2]]);
-		if (dat[1]==1907) values[1].push([new Date(dat[0]),dat[2]]);
+		if (dat[1]==1506) values[0].push([new Date(dat[0]),dat[2],dat[3]]);
+		if (dat[1]==1907) values[1].push([new Date(dat[0]),dat[2],dat[3]]);
 	}
 	let range=[new Date("2050-01-01"),20000,new Date("1900-01-01"),0];
 	for (let i=0;i<2;++i) {
@@ -410,7 +410,10 @@ function draw_graph_stations(feature,config,link_to_full=false) {
 			if (val[1]>range[3]) range[3]=val[1];
 		}
 	}
-	if (range[1]>=range[3]) return div;
+	if (range[1]>=range[3]) {
+		range[3]=range[1]+0.1;
+		range[1]=range[3]-0.2;
+	}
 	let pow=Math.floor(Math.log10(range[3]-range[1]));
 	let ytick=1;
 	if (pow>0) {
@@ -498,6 +501,7 @@ function draw_graph_stations(feature,config,link_to_full=false) {
 			circle.dataset['date']=values[j][i][0];
 			circle.dataset['type']=(j==0)?'Glyphosate':'AMPA';
 			circle.dataset['value']=values[j][i][1];
+			circle.dataset['rem']=(([7,10].includes(values[j][i][2]))?'≤':'');
 			if (j==0) circle.classList.add('fill_a'); else circle.classList.add('fill_b');
 			circle.addEventListener('mouseenter',make_tooltip);
 			circle.addEventListener('mouseleave',remove_tooltip);

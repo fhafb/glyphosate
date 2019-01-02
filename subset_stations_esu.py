@@ -12,7 +12,10 @@ with open(sys.argv[2],newline='') as esu:
     for row in reader:
         if row[0] not in stations:
             stations[row[0]]=[]
-        stations[row[0]].append((row[3],int(row[4]),float(row[5])))
+        if (row[7]=='2'):
+            stations[row[0]].append((row[3],int(row[4]),0,int(row[7])))
+        else:
+            stations[row[0]].append((row[3],int(row[4]),float(row[5]),int(row[7])))
 for code in stations.keys():
     stations[code].sort(key=lambda dat:dat[0])
 sds=ogr.Open(sys.argv[1])
