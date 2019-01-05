@@ -47,4 +47,4 @@ for feature in slayer:
         dfeature["properties"]["data"].append(dat)
     geojson["features"].append(dfeature)
 slayer=None
-json.dump(geojson,sys.stdout)
+json.dump(geojson,sys.stdout,separators=(',',':'))

@@ -26,6 +26,7 @@ body {
 	}
 
 	.mapbox {
+		position: relative;
 		display: flex;
 		flex: auto;
 		flex-flow: column nowrap;
@@ -109,6 +110,23 @@ body {
 		height: 50px;
 		display: block;
 		margin: 10px auto 10px auto;
+
+		text {
+			font-size: 0.8em;
+		}
+	}
+}
+
+.input-value {
+	display: flex;
+	flex-flow: row nowrap;
+
+	input {
+		flex: auto;
+	}
+
+	label {
+		flex: initial;
 	}
 }
 
@@ -116,6 +134,65 @@ body {
 	flex: auto;
 	height: 100%;
 	border-radius: 20px;
+}
+
+#geocoder {
+	position: absolute;
+	top: 10px;
+	left: 50px;
+	width: 40%;
+	z-index: 400;
+	font-size: 0.8em;
+
+	input[type="text"] {
+		padding: 2px;
+		color: #4d9900;
+		border-radius: 20px;
+		border: 1px solid black;
+		opacity: 0.7;
+		box-sizing: border-box;
+		width: 100%;
+		
+		&::placeholder{
+			font-style: italic;
+			color: #bbbbbb;
+		}
+
+		&:focus {
+			border: 3px inset #cccccc;
+			opacity: 1;
+			outline: none;
+		}
+	}
+
+	.autocomplete-items {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		border: 1px solid black;
+		border-top: none;
+		border-bottom: none;
+
+		div {
+			padding: 2px;
+			font-size: 0.8em;
+			cursor: pointer;
+			background-color: #fff;
+			border-bottom: 1px solid black;
+			max-height: 1em;
+			overflow: hidden;
+
+			&:hover {
+				background-color: #e9e9e9;
+			}
+
+			&.active {
+				background-color: $color_afbdarkgreen;
+				color: #ffffff;
+			}
+		}
+	}
 }
 
 .tooltip {
@@ -135,6 +212,28 @@ body {
 	text-anchor: middle;
 }
 
+.leaflet-popup-content {
+	h2 {
+		font-size: 1.2em;
+	}
+}
+
+.svglegend {
+	flex: initial;
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-between;
+	margin-bottom: 5px;
+
+	.div {
+		margin: 0px 2px;
+	}
+
+	.span {
+		margin: 0px 2px;
+	}
+}
+
 .marker {
 	width: 2em;
 	height: 2em;
@@ -146,6 +245,32 @@ body {
 	border-radius: 2em 2em 0;
 	transform: rotate(45deg);
 	border: 1px solid #000; 
+}
+
+@keyframes dash {
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+.chart-line {
+	stroke-width: 3;
+	fill: none;
+	animation: dash 3s linear forwards;
+}
+
+@keyframes appear {
+	to {
+		opacity: 1;
+	}
+}
+
+.chart-marker {
+	opacity: 0;
+	animation-name: appear;
+	animation-duration: 0.01s;
+	animation-timing-function: linear;
+	animation-fill-mode: forwards;
 }
 
 .fill_a {
@@ -171,4 +296,28 @@ body {
 .leaflet-div-icon {
 	border-style: none;
 	background-color: transparent;
+}
+
+@media (orientation: portrait) {
+	body {
+		height: auto;
+		overflow-x: hidden;
+		overflow-y: auto;
+
+		.content {
+			flex-flow: column nowrap;
+		}
+
+		.mapbox {
+			min-height: 50vh;
+		}
+	}
+
+	#tools {
+		width: auto;
+
+		.legend {
+			height: 7.8vh;
+		}
+	}
 }

@@ -12,16 +12,21 @@
 	<div class="content">
 		<div class="mapbox">
 			<div id="map"></div>
+			<div id="geocoder">
+				<input type="text" placeholder="Rechercher..." spellcheck="false">
+			</div>
 		</div>
 		<div id="tools">
 			<h1>Année</h1>
-			<input type="range" id="year" min="2008" max="2017" value="2016" list="years" oninput="updateBnvd(depjson,this.value);update_stations(stationjson,0,this.value,get_selected_param('radioparam'));update_stations(stationjson,1,this.value,get_selected_param('radioparameso'))" />
-			<label for="year"><span id="currentyear"></span></label>
-			<datalist id="years"></datalist>
+			<div class="input-value">
+				<input type="range" id="year" min="2008" max="2017" value="2016" list="years" oninput="updateBnvd(depjson,this.value);update_stations(stationjson,0,this.value,get_selected_param('radioparam'));update_stations(stationjson,1,this.value,get_selected_param('radioparameso'))" />
+				<label for="year"><span id="currentyear"></span></label>
+				<datalist id="years"></datalist>
+			</div>
 			<p style="font-style: italic">(zoomer pour accéder aux stations)</p>
 			<hr />
 			<h1>Vente de glyphosate (en t.)</h1>
-			<svg id="bnvdlegend" class="legend" viewBox="0 0 400 50">
+			<svg id="bnvdlegend" class="legend">
 				<defs>
 					<linearGradient id="bnvdgrad" x1="0%" y1="0%" x2="100%" y2="0%">
 						<stop offset="0%" style="stop-color: #FFFFFF; stop-opacity: 0.5" />
@@ -30,7 +35,7 @@
 						<stop offset="100%" style="stop-color: #800000; stop-opacity: 0.5" />
 					</linearGradient>
 				</defs>
-				<rect x="10%" y="0" width="80%" height="20" fill="url(#bnvdgrad)" stroke="black" />
+				<rect x="10%" y="0" width="80%" height="40%" fill="url(#bnvdgrad)" stroke="black" />
 			</svg>
 			<hr />
 			<h1>Présence dans les rivières (en µg/L)<span class="marker" style="display: inline-block; margin-left: 2em; font-size: 0.5em; color: #3333cc">⬤</span></h1>
@@ -40,7 +45,7 @@
 				<input type="radio" id="radioampa" name="radioparam" value="1907" onchange="update_stations(stationjson,0,document.getElementById('year').value,get_selected_param('radioparam'))" />
 				<label for="radioampa" title="Acide aminométhylphosphonique">AMPA</label>
 			</div>
-			<svg id="naiadeslegend" class="legend" viewBox="0 0 400 50">
+			<svg id="naiadeslegend" class="legend">
 				<defs>
 					<linearGradient id="stationsgrad" x1="0%" y1="0%" x2="100%" y2="0%">
 						<stop offset="0%" style="stop-color: #40e0d0; stop-opacity: 1" />
@@ -48,7 +53,7 @@
 						<stop offset="100%" style="stop-color: #ff0080; stop-opacity: 1" />
 					</linearGradient>
 				</defs>
-				<rect x="10%" y="0" width="80%" height="20" fill="url(#stationsgrad)" stroke="black" />
+				<rect x="10%" y="0" width="80%" height="40%" fill="url(#stationsgrad)" stroke="black" />
 			</svg>
 			<hr />
 			<h1>Présence dans les nappes (en µg/L)<span class="marker" style="display: inline-block; margin-left: 2em; font-size: 0.5em; color: #cc3300">⬤</span></h1>
@@ -58,8 +63,8 @@
 				<input type="radio" id="radioampaeso" name="radioparameso" value="1907" onchange="update_stations(stationjson,1,document.getElementById('year').value,get_selected_param('radioparameso'))" />
 				<label for="radioampa" title="Acide aminométhylphosphonique">AMPA</label>
 			</div>
-			<svg id="adeslegend" class="legend" viewBox="0 0 400 50">
-				<rect x="10%" y="0" width="80%" height="20" fill="url(#stationsgrad)" stroke="black" />
+			<svg id="adeslegend" class="legend">
+				<rect x="10%" y="0" width="80%" height="40%" fill="url(#stationsgrad)" stroke="black" />
 			</svg>
 		</div>
 	</div>
