@@ -4,7 +4,7 @@ body {
 	height: 100vh;
 	overflow: hidden;
 	margin: 0;
-	font: 2.8vh sans-serif;
+	font: 2vh sans-serif;
 	display: flex;
 	flex-flow: column nowrap;
 	
@@ -107,13 +107,17 @@ body {
 	
 	.legend {
 		width: 100%;
-		height: 50px;
+		height: 30px;
 		display: block;
 		margin: 10px auto 10px auto;
 
 		text {
 			font-size: 0.8em;
 		}
+	}
+
+	p {
+		margin: 0.2em 0;
 	}
 }
 
@@ -176,7 +180,7 @@ body {
 
 		div {
 			padding: 2px;
-			font-size: 0.8em;
+			font-size: 1em;
 			cursor: pointer;
 			background-color: #fff;
 			border-bottom: 1px solid black;

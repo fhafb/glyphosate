@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Glyphosate</title>
+	<meta name="description" content="Ventes et mesures de glyphosate en France">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Le glyphosate en France</title>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/> 
 	<link rel="stylesheet" href="viz.css">
 	<script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js" integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA==" crossorigin=""></script>
@@ -19,7 +21,7 @@
 		<div id="tools">
 			<h1>Année</h1>
 			<div class="input-value">
-				<input type="range" id="year" min="2008" max="2017" value="2016" list="years" oninput="updateBnvd(depjson,this.value);update_stations(stationjson,0,this.value,get_selected_param('radioparam'));update_stations(stationjson,1,this.value,get_selected_param('radioparameso'))" />
+				<input type="range" id="year" aria-label="Année" min="2008" max="2017" value="2016" step="1" list="years" oninput="updateBnvd(depjson,this.value);update_stations(stationjson,0,this.value,get_selected_param('radioparam'));update_stations(stationjson,1,this.value,get_selected_param('radioparameso'))" />
 				<label for="year"><span id="currentyear"></span></label>
 				<datalist id="years"></datalist>
 			</div>
@@ -35,14 +37,15 @@
 						<stop offset="100%" style="stop-color: #800000; stop-opacity: 0.5" />
 					</linearGradient>
 				</defs>
-				<rect x="10%" y="0" width="80%" height="40%" fill="url(#bnvdgrad)" stroke="black" />
+				<rect x="10%" y="0" width="80%" height="50%" fill="url(#bnvdgrad)" stroke="black" />
 			</svg>
+			<p><a href='#' onclick="draw_graph_france_bnvd();return false;">France entière</a></p>
 			<hr />
 			<h1>Présence dans les rivières (en µg/L)<span class="marker" style="display: inline-block; margin-left: 2em; font-size: 0.5em; color: #3333cc">⬤</span></h1>
 			<div>
-				<input type="radio" id="radioglypho" name="radioparam" value="1506" onchange="update_stations(stationjson,0,document.getElementById('year').value,get_selected_param('radioparam'))" checked />
+				<input type="radio" id="radioglypho" aria-label="Glyphosate" name="radioparam" value="1506" onchange="update_stations(stationjson,0,document.getElementById('year').value,get_selected_param('radioparam'))" checked />
 				<label for="radioglypho">Glyphosate</label>
-				<input type="radio" id="radioampa" name="radioparam" value="1907" onchange="update_stations(stationjson,0,document.getElementById('year').value,get_selected_param('radioparam'))" />
+				<input type="radio" id="radioampa" aria-label="AMPA" name="radioparam" value="1907" onchange="update_stations(stationjson,0,document.getElementById('year').value,get_selected_param('radioparam'))" />
 				<label for="radioampa" title="Acide aminométhylphosphonique">AMPA</label>
 			</div>
 			<svg id="naiadeslegend" class="legend">
@@ -53,19 +56,21 @@
 						<stop offset="100%" style="stop-color: #ff0080; stop-opacity: 1" />
 					</linearGradient>
 				</defs>
-				<rect x="10%" y="0" width="80%" height="40%" fill="url(#stationsgrad)" stroke="black" />
+				<rect x="10%" y="0" width="80%" height="50%" fill="url(#stationsgrad)" stroke="black" />
 			</svg>
+			<p><a href='#' onclick="draw_graph_france_stations(0);return false;">France entière</a></p>
 			<hr />
 			<h1>Présence dans les nappes (en µg/L)<span class="marker" style="display: inline-block; margin-left: 2em; font-size: 0.5em; color: #cc3300">⬤</span></h1>
 			<div>
-				<input type="radio" id="radioglyphoeso" name="radioparameso" value="1506" onchange="update_stations(stationjson,1,document.getElementById('year').value,get_selected_param('radioparameso'))" checked />
+				<input type="radio" id="radioglyphoeso" aria-label="Glyphosate" name="radioparameso" value="1506" onchange="update_stations(stationjson,1,document.getElementById('year').value,get_selected_param('radioparameso'))" checked />
 				<label for="radioglypho">Glyphosate</label>
-				<input type="radio" id="radioampaeso" name="radioparameso" value="1907" onchange="update_stations(stationjson,1,document.getElementById('year').value,get_selected_param('radioparameso'))" />
+				<input type="radio" id="radioampaeso" aria-label="AMPA" name="radioparameso" value="1907" onchange="update_stations(stationjson,1,document.getElementById('year').value,get_selected_param('radioparameso'))" />
 				<label for="radioampa" title="Acide aminométhylphosphonique">AMPA</label>
 			</div>
 			<svg id="adeslegend" class="legend">
-				<rect x="10%" y="0" width="80%" height="40%" fill="url(#stationsgrad)" stroke="black" />
+				<rect x="10%" y="0" width="80%" height="50%" fill="url(#stationsgrad)" stroke="black" />
 			</svg>
+			<p><a href='#' onclick="draw_graph_france_stations(1);return false;">France entière</a></p>
 		</div>
 	</div>
 	<script src="viz.js"></script>

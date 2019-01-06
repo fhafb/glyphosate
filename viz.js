@@ -50,7 +50,7 @@ function create_tooltip_bnvd(feature) {
 	title.textContent=feature.properties["nom"];
 	content.appendChild(title);
 	let p=document.createElement("p");
-	p.textContent="Vente de glyphosate en "+year+" : "+Number(feature["properties"]['data'][i][2]).toLocaleString("fr-FR",{maximumFractionDigits:0})+" kg";
+	p.textContent="Vente de glyphosate en "+year+" : "+Number(feature["properties"]['data'][i][1]).toLocaleString("fr-FR",{maximumFractionDigits:0})+" kg";
 	content.appendChild(p);
 	return content;
 }
@@ -89,14 +89,14 @@ function updateBnvd(depjson,year) {
 	for (let feat of depjson["features"]) {
 		let i=get_last_element_before(feat['properties']['data'],year);
 		if (i<0) continue;
-		if (feat["properties"]['data'][i][2]>maxvalue) maxvalue=feat["properties"]['data'][i][2];
+		if (feat["properties"]['data'][i][1]>maxvalue) maxvalue=feat["properties"]['data'][i][1];
 	}
 	bnvd.setStyle(function(feature) {
 		let num=0;
 		for (num=0;num<feature['properties']['data'].length;++num) if (feature['properties']['data'][num][0]>year) break;
 		--num;
 		if (num<0) return;
-		rgbcur=colorscale([[0,0xFFFFFF00],[0.333,0xFFFF0000],[0.667,0xFF000000],[1,0x80000000]],0,maxvalue,feature['properties']['data'][num][2]);
+		rgbcur=colorscale([[0,0xFFFFFF00],[0.333,0xFFFF0000],[0.667,0xFF000000],[1,0x80000000]],0,maxvalue,feature['properties']['data'][num][1]);
 		return {
 			weight: 1,
 			color: "#000",
@@ -111,7 +111,7 @@ function updateBnvd(depjson,year) {
 	for (let i=0;i<=4;++i) {
 		let text=document.createElementNS("http://www.w3.org/2000/svg",'text');
 		text.setAttribute('x',''+(10+80*i/4)+'%');
-		text.setAttribute('y','50%');
+		text.setAttribute('y','75%');
 		text.setAttribute('style','text-anchor: middle; dominant-baseline: hanging');
 		text.textContent=Number(Math.floor(maxvalue*i/4000)).toFixed(0);
 		legend.appendChild(text);
@@ -149,8 +149,9 @@ function update_stations(json,num,year,param,force_add) {
 				'series':[{"id":1506,"stroke_style":"stroke_a","fill_style":"fill_a","name":"Glyphosate"},{"id":1907,"stroke_style":"stroke_b","fill_style":"fill_b","name":"AMPA"}],
 				'ytitle':'µg/L',
 				'ytickmultiplier':1,
-				'tooltip':{'function':(event)=>{make_tooltip_generic(event,{'template':'{date} : {rem}{value} µg/L {name}','size':[220,23]})},'date_year_only':false},
-				'download':[['Date',0],['CdParam',1],['Résultat',2],['CdRemarque',3]],
+				'tooltip':{'function':(event)=>{make_tooltip_generic(event,{'template':'{date} : {rem}{value} µg/L {name}','size':[220,23]})}},
+				'date_year_only':false,
+				'fieldmap':{'date':[0,'Date'],'id':[1,'CdParam'],'value':[2,"Résultat (µg/L)"],'rem':[3,'CdRemarque']},
 				'link_to_full':true,
 				'link_to_download':true
 			}));
@@ -190,7 +191,7 @@ function update_stations(json,num,year,param,force_add) {
 	for (let i=0;i<=4;++i) {
 		let text=document.createElementNS("http://www.w3.org/2000/svg",'text');
 		text.setAttribute('x',''+(10+80*i/4)+'%');
-		text.setAttribute('y','50%');
+		text.setAttribute('y','75%');
 		text.setAttribute('style','text-anchor: middle; dominant-baseline: hanging');
 		if (i==4) text.textContent='≥';
 		text.textContent+=maxvalue*i/4;
@@ -199,60 +200,73 @@ function update_stations(json,num,year,param,force_add) {
 }
 
 /***********************
+ *    Screen popup     *
+ ***********************/
+function open_screen_popup(content) {
+	let cover=document.createElement('div');
+	cover.id='overlay';
+	document.body.insertAdjacentElement('afterbegin',cover);
+	setTimeout(function() {
+		cover.style.opacity=0.5;
+	},20);
+	let popup=document.createElement('div');
+	popup.id='popup';
+	cover.insertAdjacentElement('afterend',popup);
+	popup.addEventListener('transitionend',function(e) {
+		let cbutton=document.createElement('div');
+		cbutton.classList.add('closebutton');
+		cbutton.addEventListener('click',function(e) {
+			let popup=document.getElementById('popup');
+			popup.addEventListener('transitionend',()=> {popup.parentNode.removeChild(popup);});
+			setTimeout(() => {popup.style.height='0px';},20);
+			let cover=document.getElementById('overlay');
+			cover.addEventListener('transitionend',()=> {cover.parentNode.removeChild(cover);});
+			setTimeout(() => {cover.style.opacity='0';},20);
+		});
+		popup.appendChild(cbutton);
+		popup.appendChild(content);
+	},{once:true});
+	setTimeout(function() {
+		popup.style.height='90vh';
+	},20);
+}
+
+
+/***********************
  *     Line charts     *
  ***********************/
-function make_link_to_full_graph(draw_function,config,feature) {
+function make_link_to_full_graph(draw_function,values,config) {
 	let linka=document.createElement('a');
 	linka.setAttribute('href','#');
 	linka.textContent='Afficher en plein écran';
 	linka.addEventListener('click',function(e) {
-		let cover=document.createElement('div');
-		cover.id='overlay';
-		document.body.insertAdjacentElement('afterbegin',cover);
-		setTimeout(function() {
-			cover.style.opacity=0.5;
-		},20);
-		let popup=document.createElement('div');
-		popup.id='popup';
-		cover.insertAdjacentElement('afterend',popup);
-		popup.addEventListener('transitionend',function(e) {
-			let cbutton=document.createElement('div');
-			cbutton.classList.add('closebutton');
-			cbutton.addEventListener('click',function(e) {
-				let popup=document.getElementById('popup');
-				popup.addEventListener('transitionend',()=> {popup.parentNode.removeChild(popup);});
-				setTimeout(() => {popup.style.height='0px';},20);
-				let cover=document.getElementById('overlay');
-				cover.addEventListener('transitionend',()=> {cover.parentNode.removeChild(cover);});
-				setTimeout(() => {cover.style.opacity='0';},20);
-			});
-			popup.appendChild(cbutton);
-			config['size']=['100%','100%'];
-			config['viewbox']=[document.documentElement.clientWidth*0.86,document.documentElement.clientHeight*0.86-140];
-			config['link_to_full']=false;
-			let content=draw_function(feature,config);
-			popup.appendChild(content);
-		},{once:true});
-		setTimeout(function() {
-			popup.style.height='90vh';
-		},20);
+		config['size']=['100%','100%'];
+		config['viewbox']=[document.documentElement.clientWidth*0.86,document.documentElement.clientHeight*0.86-140];
+		config['link_to_full']=false;
+		let content=draw_function(values,config);
+		open_screen_popup(content);
 		return false;
 	});
 	return linka;
 }
 
-function make_link_to_download(config,feature) {
+function make_link_to_download(values,config) {
 	let linka=document.createElement('a');
 	linka.textContent='Télécharger les données';
-	let csv='';
-	for (field of config['download']) {
-		csv+=field[0]+'\t';
-	}
+	let csv=config['fieldmap']['date'][1];
+	if ('id' in config['fieldmap']) csv+='\t'+config['fieldmap']['id'][1];
+	csv+='\t'+config['fieldmap']['value'][1];
+	if ('rem' in config['fieldmap']) csv+='\t'+config['fieldmap']['rem'][1];
+	csv+='\n';
 	csv=csv.substring(0,csv.length-1)+'\n';
-	for (dat of feature['properties']['data']) {
-		for (field of config['download']) csv+=dat[field[1]]+'\t';
-		csv=csv.substring(0,csv.length-1)+'\n';
-	}
+	for (let i=0;i<values.length;++i) 
+		for (vals of values[i]) {
+			if (config['date_year_only']) csv+=vals[0].getFullYear(); else csv+=vals[0].toISOString().substring(0,10);
+			if ('id' in config['fieldmap']) csv+='\t'+config['series'][i]['id'];
+			csv+='\t'+vals[1];
+			if ('rem' in config['fieldmap']) csv+='\t'+vals[2];
+			csv+='\n';
+		}
 	linka.setAttribute('href','data:text/csv,'+encodeURIComponent(csv));
 	linka.setAttribute('download','valeurs.csv');
 	return linka;
@@ -299,26 +313,17 @@ function make_tooltip_generic(event,config) {
 
 /**
  * Create a div with line charts
- * @param {object} feature - Feature for which the charts are drawn
+ * @param {object} values - Array of values, one item array per chart line, then each item array holds triplets (date, value, remark)
  * @param {object} config - Configuration of the div
  */
-function draw_graph_stations(feature,config) {
+function draw_graph(values,config) {
 	let div=document.createElement('div');
 	div.style.display='flex';
 	div.style.flexFlow='column nowrap';
 	div.style.height='100%';
 	// Create the title from the template
 	let title=document.createElement('h2');
-	let re=/\{([^}]*)\}/g;
-	let titletemplate=config['titletemplate'];
-	let titlehtml='';
-	let pos=0;
-	while ((match=re.exec(titletemplate))!=null) {
-		titlehtml+=titletemplate.substring(pos,match.index)+feature.properties[match[1]];
-		pos=match.index+match[0].length;
-	}
-	titlehtml+=titletemplate.substring(pos);
-	title.innerHTML=titlehtml;
+	title.innerHTML=config['title'];
 	title.style.flex='initial';
 	div.appendChild(title);
 	// If there are more than one data series, add a legend
@@ -360,12 +365,6 @@ function draw_graph_stations(feature,config) {
 	svg.setAttribute('preserveAspectRatio','xMidYMid');
 	svg.setAttribute('viewBox','0 0 '+config['viewbox'][0]+' '+config['viewbox'][1]);
 	svg.style.flex='auto';
-	// Prepare the array of values
-	values=[];
-	for (let j=0;j<config['series'].length;++j) {
-		values[j]=[];
-		for (let dat of feature.properties.data) if (dat[1]==config['series'][j]['id']) values[j].push([new Date(dat[0]),dat[2],dat[3]]);
-	}
 	// Calculates the range of data for the x- and y- axis
 	let range=[new Date("2050-01-01"),20000,new Date("1900-01-01"),0];
 	for (let j=0;j<config['series'].length;++j) {
@@ -453,16 +452,6 @@ function draw_graph_stations(feature,config) {
 		svg.appendChild(text);
 	}
 	for (let j=0;j<config['series'].length;++j) {
-		/*for (let i=0;i<values[j].length-1;++i) {
-			let line=document.createElementNS("http://www.w3.org/2000/svg",'line');
-			line.setAttribute('x1',transx(values[j][i][0])+'%');
-			line.setAttribute('y1',transy(values[j][i][1])+'%');
-			line.setAttribute('x2',transx(values[j][i+1][0])+'%');
-			line.setAttribute('y2',transy(values[j][i+1][1])+'%');
-			line.classList.add(config['series'][j]['stroke_style']);
-			line.setAttribute('stroke-width','3');
-			svg.appendChild(line);
-		}*/
 		let pathd='M '+transxa(values[j][0][0])+','+transya(values[j][0][1]);
 		let pathl=[0];
 		let lx=0;
@@ -489,7 +478,7 @@ function draw_graph_stations(feature,config) {
 			circle.setAttribute('cx',transx(values[j][i][0])+'%');
 			circle.setAttribute('cy',transy(values[j][i][1])+'%');
 			circle.setAttribute('r','6px');
-			if (config['tooltip']['date_year_only']) {
+			if (config['date_year_only']) {
 				circle.dataset['date']=values[j][i][0].getFullYear();
 			} else {
 				circle.dataset['date']=values[j][i][0].toLocaleDateString('fr-FR');
@@ -509,13 +498,98 @@ function draw_graph_stations(feature,config) {
 	if (config['link_to_full'] || config['link_to_download']) {
 		let linkp=document.createElement('p');
 		if (config['link_to_full']) {
-			linkp.appendChild(make_link_to_full_graph(draw_graph_stations,config,feature));
+			linkp.appendChild(make_link_to_full_graph(draw_graph,values,config));
 			if (config['link_to_download']) linkp.insertAdjacentHTML('beforeend',' - ');
 		}
-		if (config['link_to_download']) linkp.appendChild(make_link_to_download(config,feature));
+		if (config['link_to_download']) linkp.appendChild(make_link_to_download(values,config));
 		div.appendChild(linkp);
 	}
 	return div;
+}
+
+function draw_graph_stations(feature,config) {
+	// Create the title from the template
+	let re=/\{([^}]*)\}/g;
+	let titletemplate=config['titletemplate'];
+	let titlehtml='';
+	let pos=0;
+	while ((match=re.exec(titletemplate))!=null) {
+		titlehtml+=titletemplate.substring(pos,match.index)+feature.properties[match[1]];
+		pos=match.index+match[0].length;
+	}
+	titlehtml+=titletemplate.substring(pos);
+	config['title']=titlehtml;
+	// Prepare the array of values
+	let values=[];
+	for (let j=0;j<config['series'].length;++j) {
+		values[j]=[];
+		for (let dat of feature.properties.data) if (!('id' in config['fieldmap']) || dat[config['fieldmap']['id'][0]]==config['series'][j]['id']) values[j].push([new Date(dat[config['fieldmap']['date'][0]]),dat[config['fieldmap']['value'][0]],('rem' in config['fieldmap'])?(dat[config['fieldmap']['rem'][0]]):0]);
+	}
+	config['feature']=feature;
+	// Draw the graph
+	return draw_graph(values,config);
+}
+
+function draw_graph_france(geojson,config) {
+	// Prepare the array of values
+	values=[];
+	for (let j=0;j<config['series'].length;++j) {
+		pvalues={};
+		for (let feat of geojson['features'])
+			for (let dat of feat['properties']['data'])
+				if (!('id' in config['fieldmap']) || dat[1]==config['series'][j]['id']) {
+					let year=dat[config['fieldmap']['date'][0]].substring(0,4);
+					let val=0;
+					if ('rem' in config['fieldmap'] && [7,10].includes(dat[config['fieldmap']['rem'][0]])) val=dat[config['fieldmap']['value'][0]]/2; else val=dat[config['fieldmap']['value'][0]];
+					if (year in pvalues) {
+						pvalues[year]=[pvalues[year][0]+val,pvalues[year][1]+1];
+					} else {
+						pvalues[year]=[val,1];
+					}
+				}
+		values[j]=[];
+		if (config['aggregate']=='mean') for (let year in pvalues) values[j].push([new Date(''+year),pvalues[year][0]/pvalues[year][1],0]);
+		else for (let year in pvalues) values[j].push([new Date(''+year),pvalues[year][0],0]);
+		values[j].sort((a,b)=>{return a[0]-b[0]});
+	}
+	// Draw the graph
+	return draw_graph(values,config);
+}
+
+function draw_graph_france_bnvd() {
+	let content=draw_graph_france(depjson,{
+		'size':["100%","100%"],
+		'viewbox':[document.documentElement.clientWidth*0.86,document.documentElement.clientHeight*0.86-140],
+		'title':'Ventes de glyphosate en France',
+		'series':[{"id":0,"stroke_style":"stroke_a","fill_style":"fill_a","name":"Glyphosate"}],
+		'ytitle':'t de glyphosate vendues',
+		'ytickmultiplier':0.001,
+		'tooltip':{'function':(event)=>{make_tooltip_generic(event,{'template':'{date} : {value} t.','size':[180,23]});}},
+		'date_year_only':true,
+		'fieldmap':{'date':[0,'Année'],'value':[1,"Ventes (kg)"]},
+		'aggregate':'sum',
+		'link_to_full':false,
+		'link_to_download':true
+	});
+	open_screen_popup(content);
+}
+
+function draw_graph_france_stations(i) {
+	let content=draw_graph_france(stationjson[i],{
+		'size':["100%","100%"],
+		'viewbox':[document.documentElement.clientWidth*0.86,document.documentElement.clientHeight*0.86-140],
+		'title':(i==0)?"Présence dans les cours d'eau français":"Présence dans les nappas françaises",
+		'series':[{"id":1506,"stroke_style":"stroke_a","fill_style":"fill_a","name":"Glyphosate"},{"id":1907,"stroke_style":"stroke_b","fill_style":"fill_b","name":"AMPA"}],
+		'ytitle':'µg/L',
+		'ytickmultiplier':1,
+		'tooltip':{'function':(event)=>{make_tooltip_generic(event,{'template':'{date} : {value} µg/L {name}','size':[220,23]})}},
+		'date_year_only':true,
+		'fieldmap':{'date':[0,'Date'],'id':[1,'CdParam'],'value':[2,"Résultat (µg/L)"],'rem':[3,'CdRemarque']},
+		'aggregate':'mean',
+		'link_to_full':false,
+		'link_to_download':true
+	});
+	open_screen_popup(content);
 }
 
 /***********************
@@ -658,6 +732,7 @@ for (let i=2008;i<=2017;++i) {
 	let opt=document.createElement('option');
 	opt.setAttribute('value',i);
 	opt.setAttribute('label',i);
+	opt.textContent=i;
 	ylist.appendChild(opt);
 }
 // Global variables
@@ -739,10 +814,11 @@ let promise=new Promise(function(resolve,reject) {
 						'viewbox':[400,150],
 						'titletemplate':'{nom}',
 						'series':[{"id":0,"stroke_style":"stroke_a","fill_style":"fill_a","name":"Glyphosate"}],
-						'ytitle':'t de glyphosate vendus',
+						'ytitle':'t de glyphosate vendues',
 						'ytickmultiplier':0.001,
-						'tooltip':{'function':(event)=>{make_tooltip_generic(event,{'template':'{date} : {value} t.','size':[180,23]});},'date_year_only':true},
-						'download':[['Année',0],['Ventes (kg)',2]],
+						'tooltip':{'function':(event)=>{make_tooltip_generic(event,{'template':'{date} : {value} kg.','size':[180,23]});}},
+						'date_year_only':true,
+						'fieldmap':{'date':[0,'Année'],'value':[1,"Ventes (kg)"]},
 						'link_to_full':true,
 						'link_to_download':true
 					}));
