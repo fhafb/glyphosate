@@ -83,7 +83,7 @@ body {
     font-size: 1em; }
   #tools .legend {
     width: 100%;
-    height: 30px;
+    height: 6vh;
     display: block;
     margin: 10px auto 10px auto; }
     #tools .legend text {
